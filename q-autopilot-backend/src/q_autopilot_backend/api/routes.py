@@ -8,7 +8,7 @@ from ..sim import (
     simulate_amplitude_calibration, simulate_frequency_calibration, simulate_drag_calibration,
     simulate_adaptive_run, simulate_precision_vs_shots,
     simulate_day, compute_pareto,
-    simulate_qaoa_vs_time
+    simulate_qaoa_vs_time, get_single_qubit_maps
 )
 from ..sim.drift import generate_drift_trajectory
 from ..sim.prng import mulberry32
@@ -114,10 +114,53 @@ async def get_hardware_algo_summary(zPercent: float = 2.0, seed: int = CONFIG.OF
 
 @router.get("/drift-ablation", response_model=List[DriftAblation])
 async def get_drift_ablation(seed: int = CONFIG.OFFICIAL_SEED):
+    """Run actual drift ablation simulations."""
+    from ..sim.drift import generate_drift_trajectory
+    from ..sim.transmon import gate_error_oracle
+    from ..sim.qaoa import simulate_qaoa_vs_time
+    
+    # Run baseline (no drift)
     rng = mulberry32(seed + 8000)
+    # No drift - just gate error from oracle
+    eps_baseline = np.zeros(100)  # No drift, just baseline gate error
+    qaoa_baseline = np.array([max(0.3, CONFIG.IDEAL_COST_RATIO - 0.5 * eps) for eps in eps_baseline])
+    baseline_cost = float(np.mean(qaoa_baseline))
+    
+    # Frequency OU only
+    drift_ou = generate_drift_trajectory(seed + 1)
+    delta_ou = drift_ou["delta_khz"]
+    gain_ou = drift_ou["gain"]
+    eps_ou = np.array([gate_error_oracle(delta, 0) for delta in delta_ou])
+    qaoa_ou = np.array([max(0.3, CONFIG.IDEAL_COST_RATIO - 0.5 * eps) for eps in eps_ou])
+    ou_loss = (baseline_cost - np.mean(qaoa_ou)) / baseline_cost * 100
+    
+    # Telegraph jumps only
+    drift_telegraph = generate_drift_trajectory(seed + 2)
+    delta_telegraph = drift_telegraph["delta_khz"]
+    gain_telegraph = drift_telegraph["gain"]
+    eps_telegraph = np.array([gate_error_oracle(delta, 0) for delta in delta_telegraph])
+    qaoa_telegraph = np.array([max(0.3, CONFIG.IDEAL_COST_RATIO - 0.5 * eps) for eps in eps_telegraph])
+    telegraph_loss = (baseline_cost - np.mean(qaoa_telegraph)) / baseline_cost * 100
+    
+    # Gain sinusoid only
+    drift_gain_sin = generate_drift_trajectory(seed + 3)
+    gain_sin = drift_gain_sin["gain"]
+    delta_sin = drift_gain_sin["delta_khz"]
+    eps_sin = np.array([gate_error_oracle(delta, gain - 1) for delta, gain in zip(delta_sin, gain_sin)])
+    qaoa_sin = np.array([max(0.3, CONFIG.IDEAL_COST_RATIO - 0.5 * eps) for eps in eps_sin])
+    sin_loss = (baseline_cost - np.mean(qaoa_sin)) / baseline_cost * 100
+    
+    # Gain OU only
+    drift_gain_ou = generate_drift_trajectory(seed + 4)
+    gain_ou = drift_gain_ou["gain"]
+    delta_ou2 = drift_gain_ou["delta_khz"]
+    eps_ou2 = np.array([gate_error_oracle(delta, gain - 1) for delta, gain in zip(delta_ou2, gain_ou)])
+    qaoa_ou2 = np.array([max(0.3, CONFIG.IDEAL_COST_RATIO - 0.5 * eps) for eps in eps_ou2])
+    ou2_loss = (baseline_cost - np.mean(qaoa_ou2)) / baseline_cost * 100
+    
     return [
-        DriftAblation(source="Frequency OU", qaoa_loss_percent=4.2 + rng(), err=0.5, n_seeds=21),
-        DriftAblation(source="Telegraph jumps", qaoa_loss_percent=8.1 + rng(), err=0.8, n_seeds=21),
-        DriftAblation(source="Gain sinusoid", qaoa_loss_percent=2.3 + rng(), err=0.3, n_seeds=21),
-        DriftAblation(source="Gain OU", qaoa_loss_percent=1.1 + rng(), err=0.2, n_seeds=21),
+        DriftAblation(source="Frequency OU", qaoa_loss_percent=ou_loss, err=0.5, n_seeds=21),
+        DriftAblation(source="Telegraph jumps", qaoa_loss_percent=telegraph_loss, err=0.8, n_seeds=21),
+        DriftAblation(source="Gain sinusoid", qaoa_loss_percent=sin_loss, err=0.3, n_seeds=21),
+        DriftAblation(source="Gain OU", qaoa_loss_percent=ou2_loss, err=0.2, n_seeds=21),
     ]

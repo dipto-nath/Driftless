@@ -230,3 +230,35 @@ def simulate_ramsey_shot(tau_us: float, delta_khz: float, shots: int, rng) -> in
     """Simulate Ramsey measurement with shot noise."""
     p1 = simulate_ramsey(tau_us, delta_khz)
     return np.random.binomial(shots, p1)
+
+
+def get_single_qubit_maps(eps_oracle: np.ndarray, t_h: np.ndarray) -> list:
+    """
+    Get single-qubit M matrices for each time step from the transmon simulation.
+    Returns list of 2x2 M matrices for each time step.
+    """
+    M_matrices = []
+    
+    # Pre-compute the π pulse unitary once (with DRAG)
+    U_pi = simulate_populations(with_drag=True, beta_ns=0.53, delta=0.0, gain=1.0)
+    # Extract the 2x2 M matrix from the 3x3 unitary
+    # We need the actual unitary, not just the populations
+    # For now, use a simplified model based on gate_error_oracle
+    # In a full implementation, we'd compute the actual M matrix from the propagator
+    
+    # For now, we'll create M matrices based on the gate error
+    # This is a simplified model - in a full implementation, we'd extract M from the propagator
+    for eps in eps_oracle:
+        # Fidelity F = 1 - eps
+        fidelity = 1 - eps
+        # Clamp fidelity to [0, 1] to avoid numerical issues
+        fidelity = float(np.clip(fidelity, 0.0, 1.0))
+        # For a π pulse, ideal M = -i X = [[0, -i], [-i, 0]]
+        # With fidelity F, the M matrix has reduced coherence
+        # We model this as: M = sqrt(F) * (-i X) + sqrt(1-F) * noise
+        # For simplicity, we use a depolarizing model
+        sqrt_F = np.sqrt(max(0.0, fidelity))
+        M = np.array([[0, -1j * sqrt_F], [-1j * sqrt_F, 0]], dtype=complex)
+        M_matrices.append(M)
+    
+    return M_matrices
