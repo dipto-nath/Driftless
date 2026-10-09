@@ -6,9 +6,12 @@ import { Slider } from "@/components/ui/slider";
 import { useState, useMemo } from "react";
 import { LineChart } from "@/components/charts";
 import { useDayResult } from "@/data/hooks";
+import type { Shape } from "plotly.js";
+
+type Policy = "P0" | "P1" | "P2";
 
 export function Policies() {
-  const [policy, setPolicy] = useState<"P0" | "P1" | "P2">("P2");
+  const [policy, setPolicy] = useState<Policy>("P2");
   const [p1Period, setP1Period] = useState(60);
   const [p2CheckInterval, setP2CheckInterval] = useState(5);
   const [p2Threshold, setP2Threshold] = useState(3);
@@ -23,7 +26,7 @@ export function Policies() {
 
   const seedNum = seed === "all" ? 2026 : parseInt(seed);
 
-  const { data: day } = useDayResult(policy as any, params, seedNum);
+  const { data: day } = useDayResult(policy, params, seedNum);
   const { data: allDays } = useDayResult("P1", { period_min: 60 }, seedNum);
 
   const series = useMemo(() => {
@@ -100,7 +103,7 @@ export function Policies() {
                 series={series.filter(s => s.name.includes("Δ"))}
                 yAxis={{ type: "linear", title: "Δ (kHz)" }}
                 height={350}
-                shapes={day.calib_windows.map((w) => ({ type: "rect", x0: w.start_h, x1: w.end_h, y0: -1000, y1: 1000, fillcolor: w.kind === "full" ? "rgba(255,0,0,0.1)" : "rgba(255,255,0,0.1)", line: { width: 0 }, layer: "below" as const }))}
+                shapes={day.calib_windows.map((w) => ({ type: "rect", x0: w.start_h, x1: w.end_h, y0: -1000, y1: 1000, fillcolor: w.kind === "full" ? "rgba(255,0,0,0.1)" : "rgba(255,255,0,0.1)", line: { width: 0 }, layer: "below" as const, visible: true, xref: "x", yref: "y" } as Shape))}
               />
               <LineChart
                 title="Gain g(t)"
@@ -123,8 +126,8 @@ export function Policies() {
                 yAxis={{ type: "log", title: "Gate Error ε", range: [1e-5, 1e-2] }}
                 height={350}
                 shapes={[
-                  { type: "line", x0: 0, x1: 24, y0: 1e-3, y1: 1e-3, line: { color: "var(--danger)", dash: "dash", width: 1 } },
-                  ...day.calib_windows.map((w) => ({ type: "rect", x0: w.start_h, x1: w.end_h, y0: 1e-5, y1: 1e-2, fillcolor: w.kind === "full" ? "rgba(255,0,0,0.1)" : "rgba(255,255,0,0.1)", line: { width: 0 }, layer: "below" as const }))
+                  { type: "line", x0: 0, x1: 24, y0: 1e-3, y1: 1e-3, line: { color: "var(--danger)", dash: "dash", width: 1 }, visible: true, xref: "x", yref: "y" } as Shape,
+                  ...day.calib_windows.map((w) => ({ type: "rect", x0: w.start_h, x1: w.end_h, y0: 1e-5, y1: 1e-2, fillcolor: w.kind === "full" ? "rgba(255,0,0,0.1)" : "rgba(255,255,0,0.1)", line: { width: 0 }, layer: "below" as const, visible: true, xref: "x", yref: "y" } as Shape))
                 ]}
               />
               <LineChart

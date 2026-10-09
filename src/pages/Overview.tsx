@@ -3,6 +3,7 @@ import { StatCard } from "@/components/shared/StatCard";
 import { DataState } from "@/components/shared/DataState";
 import { LineChart, ScatterChart } from "@/components/charts";
 import { useDayResult, usePareto } from "@/data/hooks";
+import type { Shape } from "plotly.js";
 
 export function Overview() {
   const { data: day } = useDayResult("P2", { check_interval_min: 5, trigger_threshold: 3 }, 2026);
@@ -55,10 +56,10 @@ export function Overview() {
               ]}
               yAxis={{ type: "log", title: "Gate Error ε", range: [1e-5, 1e-2] }}
               shapes={[
-                { type: "line", x0: 0, x1: 24, y0: 1e-3, y1: 1e-3, line: { color: "var(--danger)", dash: "dash", width: 1 } }
+                { type: "line", x0: 0, x1: 24, y0: 1e-3, y1: 1e-3, line: { color: "var(--danger)", dash: "dash", width: 1 }, visible: true, xref: "x", yref: "y" } as Shape,
               ]}
               annotations={[
-                { x: 12, y: 1e-3, text: "ε_th = 1e-3", showarrow: false, yshift: 10, font: { color: "var(--danger)" } }
+                { x: 12, y: 1e-3, text: "ε_th = 1e-3", showarrow: false, yshift: 10, font: { color: "var(--danger)" }, xref: "x", yref: "y" } as const,
               ]}
             />
           )}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DataState } from "@/components/shared/DataState";
 import { ChartCard } from "@/components/shared/ChartCard";
@@ -34,12 +34,10 @@ Policy P2 (adaptive health-check calibration) achieves the optimal trade-off bet
 3. Higgins et al., Nature 450, 393 (2007) — Adaptive phase estimation
 4. Granade et al., NJP 14, 103013 (2012) — Robust online Hamiltonian learning`
   );
-  const [wordCount, setWordCount] = useState(0);
-
-  useEffect(() => {
-    const words = memoText.trim().split(/\s+/).filter(Boolean).length;
-    setWordCount(words);
-  }, [memoText]);
+  const wordCount = useMemo(() => 
+    memoText.trim().split(/\s+/).filter(Boolean).length, 
+    [memoText]
+  );
 
   const figures = [
     { id: "overview", title: "Control Room Overview", data: () => ({ t_h: [], eps: [] }) },
@@ -91,7 +89,7 @@ Policy P2 (adaptive health-check calibration) achieves the optimal trade-off bet
             <ChartCard title="D6 Memo Viewer" caption="400-word target; markdown with word counter; references auto-linked">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-[var(--text-muted)]">Word count: <span className="font-mono" id="word-count">{wordCount}</span> / 400</span>
+                  <span className="text-sm text-[var(--text-muted)]">Word count: <span className="font-mono">{wordCount}</span> / 400</span>
                   <button className="px-3 py-1.5 text-sm rounded-lg bg-[var(--primary)] text-[var(--primary-fg)]" disabled>Export PDF</button>
                 </div>
                 <textarea

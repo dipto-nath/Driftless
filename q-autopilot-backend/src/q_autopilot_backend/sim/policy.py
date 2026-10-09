@@ -3,15 +3,15 @@ import json
 from typing import Dict, List
 from .prng import mulberry32, normal_random
 from .drift import generate_drift_trajectory
-from .transmon import gate_error_oracle
+from .transmon import gate_error_oracle, simulate_ramsey, simulate_ramsey_shot, simulate_populations
+from .calibration import simulate_amplitude_calibration, simulate_frequency_calibration, simulate_drag_calibration
 from .qaoa import simulate_qaoa_vs_time
 from .constants import CONFIG
 from ..api.schemas import DayResult, CalibWindow, PolicyId
 from .utils.downsample import downsample_series
 
-
 def simulate_day(policy: PolicyId, params: Dict[str, float], seed: int) -> DayResult:
-    """Full 24h simulation with recalibration logic."""
+    """Full 24h simulation with recalibration logic using real calibration primitives."""
     rng = mulberry32(seed + 7000)
     
     # Generate drift
@@ -60,9 +60,16 @@ def simulate_day(policy: PolicyId, params: Dict[str, float], seed: int) -> DayRe
         if in_calibration:
             if t >= cal_end_time:
                 in_calibration = False
-                # Reset residuals after calibration
-                delta_est[i] = delta_true[i]
-                gain_est[i] = gain_true[i]
+                # Reset residuals after calibration using real calibration estimates
+                cal_seed = seed + i * 1000
+                amp_cal = simulate_amplitude_calibration(cal_seed)
+                freq_cal = simulate_frequency_calibration(cal_seed + 1000)
+                drag_cal = simulate_drag_calibration(cal_seed + 2000)
+                
+                delta_est[i] = freq_cal.estimate[-1]
+                gain_est[i] = amp_cal.estimate[-1]
+                # DRAG beta is stored but not used in oracle directly
+                
                 last_full_cal = i
                 if calib_windows:
                     calib_windows[-1].end_h = t

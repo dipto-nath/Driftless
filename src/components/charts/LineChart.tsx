@@ -1,6 +1,18 @@
 import Plot from "react-plotly.js";
 import { ChartCard } from "@/components/shared/ChartCard";
 import type { ReactNode } from "react";
+import type { Shape } from "plotly.js";
+
+interface PlotlyAnnotation {
+  x: number;
+  y: number;
+  text: string;
+  showarrow?: boolean;
+  yshift?: number;
+  font?: { color: string };
+  xref?: string;
+  yref?: string;
+}
 
 interface LineChartProps {
   title: string;
@@ -11,8 +23,8 @@ interface LineChartProps {
   xAxisTitle?: string;
   height?: number;
   showLegend?: boolean;
-  shapes?: any[];
-  annotations?: any[];
+  shapes?: Shape[];
+  annotations?: PlotlyAnnotation[];
   nSeeds?: number;
   uncertainty?: "SD" | "SE" | "CI95";
 }
