@@ -3,14 +3,14 @@ import { DataState } from "@/components/shared/DataState";
 import { ChartCard } from "@/components/shared/ChartCard";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useState } from "react";
+import { ScatterChart } from "@/components/charts";
+import { usePareto } from "@/data/hooks";
+import type { UncertaintyType } from "@/data/types";
 
 export function Pareto() {
-  const [uncertainty, setUncertainty] = useState<"SD" | "SE" | "CI95">("SD");
+  const [uncertainty, setUncertainty] = useState<UncertaintyType>("SD");
   const [showFrontier, setShowFrontier] = useState(true);
-  const [showP0, setShowP0] = useState(true);
-  const [showP1, setShowP1] = useState(true);
-  const [showP2, setShowP2] = useState(true);
-  const [logX, setLogX] = useState(false);
+  const { data: pareto } = usePareto(uncertainty);
 
   return (
     <div>
@@ -20,53 +20,45 @@ export function Pareto() {
       />
       <div className="grid gap-4 mb-6">
         <div className="flex flex-wrap items-center gap-4">
-          <SegmentedControl
-            value={uncertainty}
-            onValueChange={setUncertainty}
-            options={[
-              { value: "SD", label: "SD" },
-              { value: "SE", label: "SE" },
-              { value: "CI95", label: "95% CI" },
-            ]}
-          />
+          <SegmentedControl value={uncertainty} onValueChange={setUncertainty} options={[{ value: "SD", label: "SD" }, { value: "SE", label: "SE" }, { value: "CI95", label: "95% CI" }]} />
           <div className="flex items-center gap-4 border-l border-[var(--border)] pl-4 ml-4">
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={showFrontier} onChange={(e) => setShowFrontier(e.target.checked)} className="rounded border-[var(--border)]" />
-              Frontier only
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={logX} onChange={(e) => setLogX(e.target.checked)} className="rounded border-[var(--border)]" />
-              Log X
+              Show Frontier
             </label>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-4">
-          <span className="text-sm text-[var(--text-muted)]">Policy families:</span>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={showP0} onChange={(e) => setShowP0(e.target.checked)} className="rounded border-[var(--border)]" />
-            <span style={{ color: "var(--danger)" }}>●</span> P0
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={showP1} onChange={(e) => setShowP1(e.target.checked)} className="rounded border-[var(--border)]" />
-            <span style={{ color: "var(--warning)" }}>●</span> P1
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={showP2} onChange={(e) => setShowP2(e.target.checked)} className="rounded border-[var(--border)]" />
-            <span style={{ color: "var(--primary)" }}>●</span> P2
-          </label>
-        </div>
       </div>
-            <DataState state="success">
+      <DataState state="success">
         <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-          <ChartCard title="Pareto Frontier" caption={`Mock data: Mean ± ${uncertainty} over 21 seeds (20 random + official seed 2026); P2 dominates frontier`} nSeeds={21} uncertainty={uncertainty}>
-            <div className="h-[500px] bg-[var(--surface-2)] rounded-lg flex items-center justify-center text-[var(--text-muted)]">
-              Chart placeholder: Pareto scatter with error bars, frontier line, hollow official-seed marker
-            </div>
-          </ChartCard>
+          {pareto && <ScatterChart title="Pareto Frontier" caption={`Mean ± ${uncertainty} over 21 seeds; P2 dominates frontier`} points={pareto} showFrontier={showFrontier} uncertaintyLabel={uncertainty} />}
           <div className="space-y-4">
-            <ChartCard title="Configurations Table" caption="Sortable table of all ~25 configs; click 'View day' to open Policy Simulator">
-              <div className="h-96 bg-[var(--surface-2)] rounded-lg flex items-center justify-center text-[var(--text-muted)]">
-                Table placeholder: Config | Policy | Params | Calib% | ε_mean | ε_err | Frontier | View day
+            <ChartCard title="Configurations Table" caption="Sortable table; click to view day in Policy Simulator">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-[var(--border)] text-left text-[var(--text-muted)]">
+                      <th className="pb-2 px-3">Policy</th>
+                      <th className="pb-2 px-3">Params</th>
+                      <th className="pb-2 px-3">Calib %</th>
+                      <th className="pb-2 px-3">ε Mean</th>
+                      <th className="pb-2 px-3">ε Err</th>
+                      <th className="pb-2 px-3">Frontier</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pareto?.map((p, i) => (
+                      <tr key={i} className="border-b border-[var(--border)]/50 hover:bg-[var(--surface-2)] cursor-pointer">
+                        <td className="py-2 px-3 font-mono font-medium" style={{ color: `var(--${p.policy === "P0" ? "danger" : p.policy === "P1" ? "warning" : "primary"})` }}>{p.policy}</td>
+                        <td className="py-2 px-3 font-mono text-xs">{JSON.stringify(p.params)}</td>
+                        <td className="py-2 px-3">{(p.calib_fraction_mean * 100).toFixed(1)}</td>
+                        <td className="py-2 px-3 font-mono">{p.mean_eps_mean.toExponential(1)}</td>
+                        <td className="py-2 px-3 font-mono">±{p.mean_eps_err.toExponential(1)}</td>
+                        <td className="py-2 px-3">{p.on_frontier ? "✓" : ""}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </ChartCard>
           </div>

@@ -15,6 +15,9 @@ export default defineConfig({
   build: {
     target: "esnext",
     minify: "esbuild",
+    rollupOptions: {
+      external: ["plotly.js", "plotly.js/dist/plotly"],
+    },
   },
   server: {
     port: 5173,
