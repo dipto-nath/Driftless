@@ -109,9 +109,13 @@ def simulate_frequency_calibration(seed: int) -> CalibConvergence:
     for tau in [1, 2, 4, 8, 16, 32]:
         shots = 500
         dg = np.linspace(-500, 500, 401)
+        # Compute probabilities using theoretical formula for the grid (fast enough for grid)
         probs = np.cos(np.pi * dg * tau * 1e-3)**2
-        true_idx = np.argmin(np.abs(dg - (-140.0)))
-        n1 = _binomial(rng, 500, np.cos(np.pi * (-140.0) * tau * 1e-3)**2)
+        
+        # Use actual transmon simulation for the measurement
+        from .transmon import simulate_ramsey
+        p1_true = simulate_ramsey(tau, -140.0)
+        n1 = _binomial(rng, 500, p1_true)
         likelihood = probs**n1 * (1-probs)**(500-n1)
         prior = prior * likelihood
         prior /= prior.sum()

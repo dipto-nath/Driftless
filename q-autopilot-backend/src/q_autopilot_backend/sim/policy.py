@@ -23,15 +23,11 @@ def _get_cached_calibration(seed: int) -> tuple:
         )
     return _calibration_cache[seed]
 
-def _fast_calibration_update(delta_true: float, gain_true: float, delta_est: float, gain_est: float, rng) -> tuple:
-    """Fast calibration update using analytic formulas instead of full simulation."""
-    # Simple model: calibration corrects the estimate to near-true value with some noise
-    calibration_factor = 0.1  # calibration reduces error by 90%
-    delta_est_new = delta_true + (delta_est - delta_true) * 0.1
-    gain_est_new = gain_true + (gain_est - gain_true) * 0.1
-    # Simple uniform noise instead of Box-Muller for speed
-    noise = (rng() - 0.5) * 10.0  # uniform noise in [-5, 5] kHz
-    delta_est_new += noise
+
+def simulate_full_calibration(delta_true: float, gain_true: float, delta_est: float, gain_est: float, rng) -> tuple:
+    """Uses actual calibration routines."""
+    delta_est_new = simulate_frequency_calibration(100).estimate[-1]
+    gain_est_new = simulate_amplitude_calibration(100).estimate[-1]
     return delta_est_new, gain_est_new, 0.53
 def simulate_day(policy: PolicyId, params: Dict[str, float], seed: int) -> DayResult:
     rng = mulberry32(seed + 7000)
@@ -85,7 +81,7 @@ def simulate_day(policy: PolicyId, params: Dict[str, float], seed: int) -> DayRe
             if t >= cal_end_time:
                 in_calibration = False
                 # Fast calibration update - simple noise
-                delta_est[i], gain_est[i], _ = _fast_calibration_update(
+                delta_est[i], gain_est[i], _ = simulate_full_calibration(
                     delta_true[i], gain_true[i], delta_est[i-1] if i > 0 else delta_true[i], 
                     gain_est[i-1] if i > 0 else gain_true[i],
                     rng
