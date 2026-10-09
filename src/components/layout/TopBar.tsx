@@ -1,5 +1,5 @@
 import { useState, useEffect, Fragment } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ChevronDown, HelpCircle, PlayCircle, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
@@ -29,6 +29,7 @@ const BREADCRUMBS: Record<string, { label: string; icon?: LucideIcon; href?: str
 export function TopBar({ title, children }: { title: string; children?: ReactNode }) {
   const [presentationMode, setPresentationMode] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -44,7 +45,7 @@ export function TopBar({ title, children }: { title: string; children?: ReactNod
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const breadcrumbs = BREADCRUMBS[window.location.pathname] || [{ label: title }];
+  const breadcrumbs = BREADCRUMBS[location.pathname] || [{ label: title }];
 
   return (
     <header className="sticky top-0 z-30 h-14 bg-[var(--surface)]/80 backdrop-blur-sm border-b border-[var(--border)] flex items-center gap-4 px-4 lg:px-6">

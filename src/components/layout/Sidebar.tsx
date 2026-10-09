@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useLocation, NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -13,7 +13,7 @@ import {
   BookOpen,
   PlayCircle,
   Settings,
-    ChevronLeft,
+  ChevronLeft,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -30,15 +30,37 @@ const NAV_ITEMS = [
   { path: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
-export function Sidebar({ onToggle }: { onToggle: () => void }) {
-  const [collapsed, setCollapsed] = useState(false);
-    const location = useLocation();
+export function Sidebar({ 
+  collapsed: controlledCollapsed, 
+  onToggle 
+}: { 
+  collapsed: boolean; 
+  onToggle: () => void 
+}) {
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+  const location = useLocation();
+  const isInitialRender = useRef(true);
+
+  // Use controlled prop if provided, otherwise use internal state
+  const collapsed = controlledCollapsed ?? internalCollapsed;
+  const setCollapsed = controlledCollapsed ? onToggle : setInternalCollapsed;
+
+  const handleResize = useCallback(() => {
+    if (!controlledCollapsed) {
+      setInternalCollapsed(window.innerWidth < 1024);
+    }
+  }, [controlledCollapsed]);
 
   useEffect(() => {
-    if (window.innerWidth < 1024) {
-      setCollapsed(true);
+    // Set initial value without triggering effect warning
+    if (isInitialRender.current && !controlledCollapsed) {
+      setInternalCollapsed(window.innerWidth < 1024);
+      isInitialRender.current = false;
     }
-  }, []);
+    
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [handleResize, controlledCollapsed]);
 
   return (
     <aside
@@ -57,7 +79,13 @@ export function Sidebar({ onToggle }: { onToggle: () => void }) {
           )}
         </Link>
         <button
-          onClick={() => { setCollapsed(!collapsed); onToggle(); }}
+          onClick={() => { 
+            const newCollapsed = !collapsed;
+            setCollapsed(newCollapsed);
+            if (controlledCollapsed) {
+              onToggle();
+            }
+          }}
           className={cn(
             "p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors",
             collapsed && "rotate-180"

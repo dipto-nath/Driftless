@@ -2,15 +2,17 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { DataState } from "@/components/shared/DataState";
 import { ChartCard } from "@/components/shared/ChartCard";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useState, useEffect } from "react";
 
 export function Settings() {
-  const [defaultUncertainty, setDefaultUncertainty] = useState<"SD" | "SE" | "CI95">("SD");
-
-  useEffect(() => {
-    const stored = localStorage.getItem("defaultUncertainty");
-    if (stored) setDefaultUncertainty(stored as "SD" | "SE" | "CI95");
-  }, []);
+  const [defaultUncertainty, setDefaultUncertainty] = useState<"SD" | "SE" | "CI95">(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("defaultUncertainty");
+      if (stored) return stored as "SD" | "SE" | "CI95";
+    }
+    return "SD";
+  });
 
   useEffect(() => {
     localStorage.setItem("defaultUncertainty", defaultUncertainty);
@@ -29,6 +31,18 @@ export function Settings() {
               <div>
                 <label className="block text-sm text-[var(--text-muted)] mb-2">Theme</label>
                 <ThemeToggle />
+              </div>
+              <div>
+                <label className="block text-sm text-[var(--text-muted)] mb-2">Default Uncertainty Display</label>
+                <SegmentedControl
+                  value={defaultUncertainty}
+                  onValueChange={setDefaultUncertainty}
+                  options={[
+                    { value: "SD", label: "SD" },
+                    { value: "SE", label: "SE" },
+                    { value: "CI95", label: "95% CI" },
+                  ]}
+                />
               </div>
             </div>
           </ChartCard>

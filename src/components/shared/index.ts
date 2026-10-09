@@ -1,6 +1,8 @@
 export { ThemeToggle } from "./ThemeToggle";
 export { MockBadge } from "./MockBadge";
-export { SeedSelect, SeedProvider, useSeed } from "./SeedSelect";
+export { SeedSelect } from "./SeedSelect";
+export { SeedProvider, type SeedOption } from "./SeedContext";
+export { useSeed } from "./useSeed";
 export { Equation, Glossary } from "./Equation";
 export { PolicyBadge } from "./PolicyBadge";
 export { PolicyLegend } from "./PolicyLegend";

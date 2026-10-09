@@ -5,7 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactElement } from "react";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
-import { SeedProvider } from "@/components/shared/SeedSelect";
+import { SeedProvider } from "@/components/shared";
 
 import { Overview } from "@/pages/Overview";
 import { Plant } from "@/pages/Plant";

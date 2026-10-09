@@ -16,8 +16,10 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // jsdom does not implement ResizeObserver, which Radix UI components use
-(globalThis as any).ResizeObserver = class ResizeObserver {
+class ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
-};
+}
+
+(globalThis as Record<string, unknown>).ResizeObserver = ResizeObserver;

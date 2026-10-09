@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { ThemeProvider } from "./ThemeProvider";
-import { SeedProvider } from "@/components/shared/SeedSelect";
+import { SeedProvider } from "@/components/shared";
 import type { ReactNode } from "react";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -13,7 +13,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <ThemeProvider>
       <SeedProvider>
         <div className="min-h-screen bg-[var(--bg)]">
-          <Sidebar onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+          <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
           <div
             className={cn(
               "transition-all duration-200 min-h-screen",
