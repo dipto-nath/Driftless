@@ -37,11 +37,15 @@ export interface ParamDef {
   default: number;
 }
 
-export class HttpDataSource implements DataSource {
-  constructor() {}
+const API_BASE = "http://localhost:8000/api/v1";
 
+export class HttpDataSource implements DataSource {
   private async request<T>(endpoint: string): Promise<T> {
-    throw new Error(`Not implemented: backend pending - ${endpoint}`);
+    const response = await fetch(`${API_BASE}${endpoint}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+    }
+    return response.json();
   }
 
   async getStaticPulse(withDrag: boolean): Promise<StaticPulse> {

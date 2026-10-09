@@ -2,7 +2,7 @@
  * Application configuration.
  * Change DATA_SOURCE to "http" when backend is ready.
  */
-export const DATA_SOURCE: "mock" | "http" = "mock";
+export const DATA_SOURCE: "mock" | "http" = "http";
 
 export const APP_CONFIG = {
   name: "Q-Autopilot",
