@@ -95,10 +95,9 @@ def simulate_amplitude_calibration(seed: int) -> CalibConvergence:
         unit="x",
         total_shots=int(shots_cum[-1])
     )
-def simulate_frequency_calibration(seed: int) -> CalibConvergence:
+def simulate_frequency_calibration(seed: int, delta_true: float = -140.0) -> CalibConvergence:
     rng = mulberry32(seed + 3000)
     shots_cum = np.array([100, 500, 1000, 2000, 5000, 10000, 20000, 50000])
-    truth = -140.0
     delta_grid = np.linspace(-500, 500, 401)
     # Use asymmetric prior to break symmetry
     prior = np.exp(-0.5 * ((delta_grid + 200) / 100) ** 2)
@@ -114,7 +113,7 @@ def simulate_frequency_calibration(seed: int) -> CalibConvergence:
         
         # Use actual transmon simulation for the measurement
         from .transmon import simulate_ramsey
-        p1_true = simulate_ramsey(tau, -140.0)
+        p1_true = simulate_ramsey(tau, delta_true)
         n1 = _binomial(rng, 500, p1_true)
         likelihood = probs**n1 * (1-probs)**(500-n1)
         prior = prior * likelihood
@@ -131,7 +130,7 @@ def simulate_frequency_calibration(seed: int) -> CalibConvergence:
         shots_cum=[100, 500, 1000, 2000, 5000, 10000, 20000, 50000],
         estimate=estimates,
         sigma=sigmas,
-        truth=-140.0,
+        truth=delta_true,
         unit="kHz",
         total_shots=50000
     )

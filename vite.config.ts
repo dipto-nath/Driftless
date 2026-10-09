@@ -10,6 +10,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "plotly.js/dist/plotly": "plotly.js-dist",
     },
   },
   build: {
