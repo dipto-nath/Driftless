@@ -1,0 +1,45 @@
+:root {
+  /* surfaces */
+  --bg: #F6F7F4;   /* warm paper */
+  --surface: #FFFFFF;
+  --surface-2: #EEF1EC;   /* muted sage-grey */
+  --border: #DDE3DA;
+  /* text */
+  --text: #24312F;
+  --text-muted: #5E6E6A;
+  /* brand */
+  --primary: #3F8F8B;   /* calm teal */
+  --primary-soft: #D9ECEA;
+  --primary-fg: #FFFFFF;
+  /* status (muted, never harsh) */
+  --success: #5E9C76;
+  --warning: #C99A4A;
+  --danger: #C0675F;
+  --info: #6B7FB8;
+  /* chart palette: colour-blind friendly, always paired with dash/marker styles */
+  --c1: #3F8F8B;
+  --c2: #6B7FB8;
+  --c3: #D1A24C;
+  --c4: #C0675F;
+  --c5: #8E6C9A;
+  --c6: #7C8B88;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgb(36 49 47 / 0.05), 0 6px 20px rgb(36 49 47 / 0.05);
+}
+
+.dark {
+  --bg: #121A19;
+  --surface: #1A2524;
+  --surface-2: #22302E;
+  --border: #2A3836;
+  --text: #E3EBE8;
+  --text-muted: #98A8A4;
+  --primary: #6FBFB9;
+  --primary-soft: #1F3634;
+  --primary-fg: #0F1716;
+  /* status colors remain the same in dark mode for consistency */
+  --success: #5E9C76;
+  --warning: #C99A4A;
+  --danger: #C0675F;
+  --info: #6B7FB8;
+}
